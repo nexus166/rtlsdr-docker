@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+
+  rtlsdr-tcp:
+    image: nexus166/rtlsdr:arm64
+    container_name: rtlsdr-tcp
+    privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+    ports:
+      - 1234:1234/tcp
