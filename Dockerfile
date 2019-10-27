@@ -1,14 +1,16 @@
 ##
 FROM	alpine:edge
-
 SHELL	["/bin/ash", "-xeuo", "pipefail", "-c"]
 
-ARG	RTLSDR_VCS="git://git.osmocom.org/rtl-sdr"
+RUN	addgroup -S rtlsdr; \
+	adduser -H -D -S -s /dev/null -g rtlsdr rtlsdr
 
 RUN	apk update; \
-	apk upgrade; \
-	apk --no-cache --update --upgrade add ca-certificates bash build-base cmake git libusb-dev libusb-compat-dev; \
-	git clone --single-branch --progress "${RTLSDR_VCS}" /usr/src/rtl-sdr; \
+        apk upgrade; \
+        apk --no-cache --update --upgrade add ca-certificates build-base cmake git libusb-dev libusb-compat-dev;
+
+ARG	RTLSDR_VCS="git://git.osmocom.org/rtl-sdr"
+RUN	git clone --single-branch --progress "${RTLSDR_VCS}" /usr/src/rtl-sdr; \
 	mkdir -vp /usr/src/rtl-sdr/build; \
 	cd /usr/src/rtl-sdr/build; \
 	cmake \
@@ -16,18 +18,21 @@ RUN	apk update; \
 		-DINSTALL_UDEV_RULES=ON \
 		-DDETACH_KERNEL_DRIVER=ON \
 		..; \
-	make install
+	make -j$(nproc) install
 
 ##
 FROM	alpine:edge
 SHELL	["/bin/ash", "-xeuo", "pipefail", "-c"]
 
+COPY    --from=0        /etc/passwd /etc/group  /etc/
+
 RUN     apk update; \
         apk upgrade; \
         apk --no-cache --update --upgrade add libusb-dev
 
-# copy rtlsdr
-COPY	--from=0	/usr/local	/usr/local
+COPY    --from=0        /usr/local              /usr/local
+
+USER	rtlsdr
 
 EXPOSE	1234/tcp
 
