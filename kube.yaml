@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtlsdr-tcp
+spec:
+  selector:
+    matchLabels:
+      run: rtlsdr-tcp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: rtlsdr-tcp
+    spec:
+      containers:
+      - name: rtlsdr-tcp
+        image: nexus166/rtlsdr:arm64
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1234
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /dev/bus/usb
+            name: usb-buses
+      volumes:
+        - name: usb-buses
+          hostPath:
+            path: /dev/bus/usb
+      nodeSelector:
+        kubernetes.io/hostname: raspi3
+      tolerations:
+      - effect: PreferNoSchedule
+        key: armMachine
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rtlsdr-tcp
+  labels:
+    run: rtlsdr-tcp
+spec:
+  selector:
+    run: rtlsdr-tcp
+  type: NodePort
+  ports:
+  - name: rtlsdr-tcp
+    port: 1234
+    protocol: TCP
