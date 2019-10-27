@@ -37,4 +37,4 @@ USER	rtlsdr
 EXPOSE	1234/tcp
 
 ENTRYPOINT ["/usr/local/bin/rtl_tcp"]
-CMD	["-a", "0.0.0.0"]
+CMD	["-a", "::"]
